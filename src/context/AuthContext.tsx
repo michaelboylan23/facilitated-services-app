@@ -1,88 +1,108 @@
-import { createContext, useContext, useState, useEffect, type ReactNode } from "react";
-import { MsalProvider, useMsal, useIsAuthenticated } from "@azure/msal-react";
-import { msalInstance, initializeMsal } from "../services/auth";
+import { createContext, useContext, useState, useCallback, type ReactNode } from "react";
 import type { AppUser, AppRole } from "../types";
+
+// PINs are checked against environment variables (set in SWA app settings)
+const ADMIN_PIN = import.meta.env.VITE_ADMIN_PIN || "";
+const FACILITATOR_PIN = import.meta.env.VITE_FACILITATOR_PIN || "";
 
 interface AuthContextType {
   user: AppUser | null;
   isLoading: boolean;
-  login: () => Promise<void>;
-  logout: () => Promise<void>;
+  loginWithPin: (name: string, pin: string) => { success: boolean; error?: string };
+  joinSession: (name: string, sessionCode: string) => { success: boolean; error?: string };
+  logout: () => void;
 }
 
 const AuthContext = createContext<AuthContextType>({
   user: null,
-  isLoading: true,
-  login: async () => {},
-  logout: async () => {},
+  isLoading: false,
+  loginWithPin: () => ({ success: false }),
+  joinSession: () => ({ success: false }),
+  logout: () => {},
 });
 
 export function useAuth() {
   return useContext(AuthContext);
 }
 
-function AuthContextInner({ children }: { children: ReactNode }) {
-  const { instance, accounts } = useMsal();
-  const isAuthenticated = useIsAuthenticated();
-  const [user, setUser] = useState<AppUser | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+const SESSION_KEY = "fs_auth_user";
 
-  useEffect(() => {
-    if (isAuthenticated && accounts.length > 0) {
-      const account = accounts[0];
-      // TODO: Determine role from Azure AD groups or a roles list
-      const role: AppRole = "facilitator";
-      setUser({
-        id: account.localAccountId,
-        displayName: account.name || "",
-        email: account.username,
-        role,
-        isAuthenticated: true,
-      });
-    } else {
-      setUser(null);
-    }
-    setIsLoading(false);
-  }, [isAuthenticated, accounts]);
+function loadPersistedUser(): AppUser | null {
+  try {
+    const stored = sessionStorage.getItem(SESSION_KEY);
+    return stored ? JSON.parse(stored) : null;
+  } catch {
+    return null;
+  }
+}
 
-  const login = async () => {
-    try {
-      await instance.loginPopup({ scopes: ["User.Read"] });
-    } catch (err) {
-      console.error("Login failed:", err);
-    }
-  };
-
-  const logout = async () => {
-    try {
-      await instance.logoutPopup();
-      setUser(null);
-    } catch (err) {
-      console.error("Logout failed:", err);
-    }
-  };
-
-  return (
-    <AuthContext.Provider value={{ user, isLoading, login, logout }}>
-      {children}
-    </AuthContext.Provider>
-  );
+function persistUser(user: AppUser | null) {
+  if (user) {
+    sessionStorage.setItem(SESSION_KEY, JSON.stringify(user));
+  } else {
+    sessionStorage.removeItem(SESSION_KEY);
+  }
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [msalReady, setMsalReady] = useState(false);
+  const [user, setUser] = useState<AppUser | null>(loadPersistedUser);
 
-  useEffect(() => {
-    initializeMsal().then(() => setMsalReady(true));
+  const loginWithPin = useCallback((name: string, pin: string) => {
+    if (!name.trim()) {
+      return { success: false, error: "Please enter your name." };
+    }
+    if (!pin.trim()) {
+      return { success: false, error: "Please enter a PIN." };
+    }
+
+    let role: AppRole | null = null;
+    if (ADMIN_PIN && pin === ADMIN_PIN) {
+      role = "admin";
+    } else if (FACILITATOR_PIN && pin === FACILITATOR_PIN) {
+      role = "facilitator";
+    }
+
+    if (!role) {
+      return { success: false, error: "Invalid PIN." };
+    }
+
+    const newUser: AppUser = {
+      id: crypto.randomUUID(),
+      displayName: name.trim(),
+      email: "",
+      role,
+      isAuthenticated: true,
+    };
+    setUser(newUser);
+    persistUser(newUser);
+    return { success: true };
   }, []);
 
-  if (!msalReady) {
-    return <div>Loading...</div>;
-  }
+  const joinSession = useCallback((name: string, _sessionCode: string) => {
+    if (!name.trim()) {
+      return { success: false, error: "Please enter your name." };
+    }
+    // TODO: Validate session code against active assessments
+    const newUser: AppUser = {
+      id: crypto.randomUUID(),
+      displayName: name.trim(),
+      email: "",
+      role: "user" as AppRole,
+      isAuthenticated: true,
+    };
+    setUser(newUser);
+    persistUser(newUser);
+    return { success: true };
+  }, []);
+
+  const logout = useCallback(() => {
+    setUser(null);
+    persistUser(null);
+  }, []);
 
   return (
-    <MsalProvider instance={msalInstance}>
-      <AuthContextInner>{children}</AuthContextInner>
-    </MsalProvider>
+    <AuthContext.Provider value={{ user, isLoading: false, loginWithPin, joinSession, logout }}>
+      {children}
+    </AuthContext.Provider>
   );
 }

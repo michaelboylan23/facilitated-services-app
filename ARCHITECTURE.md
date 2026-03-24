@@ -37,13 +37,15 @@ facilitated-services-app/
 ```
 
 ## Authentication & Roles
+
+### Current: PIN / Session Code (Interim)
 | Role | Auth Method | Permissions |
 |------|------------|-------------|
-| Admin | Microsoft Entra ID (@mbpce.com) | Full access: manage master questions, categories, all projects/assessments |
-| Facilitator | Microsoft Entra ID (@mbpce.com) | Create/manage projects and assessments, facilitate sessions |
-| User | Simple login (TBD) | Respond to assessment questions during facilitated sessions |
+| Admin | Admin PIN (stored in SWA app settings) | Full access: manage master questions, categories, all projects/assessments |
+| Facilitator | Facilitator PIN (stored in SWA app settings) | Create/manage projects and assessments, facilitate sessions |
+| User | Session code + name (no account required) | Respond to assessment questions during facilitated sessions |
 
-Role assignment is TBD — likely via Azure AD groups or a SharePoint roles list.
+> **Planned upgrade:** Replace Admin/Facilitator PINs with Microsoft Entra ID (MSAL) once an Azure AD App Registration is created for the @mbpce.com tenant. The session code approach for regular users will remain. MSAL packages are already installed and auth service code exists at `src/services/auth.ts` — it just needs a valid client ID and tenant ID to activate.
 
 ## SharePoint Lists (Data Layer)
 Site: `https://mbpce.sharepoint.com/sites/PRAC-FSR`
@@ -85,13 +87,16 @@ Each type has its own set of master categories and questions. Scoring may differ
 ## Environment Variables
 | Variable | Purpose |
 |----------|---------|
-| `VITE_AZURE_CLIENT_ID` | Azure AD App Registration client ID |
-| `VITE_AZURE_TENANT_ID` | Azure AD tenant ID for @mbpce.com |
+| `VITE_ADMIN_PIN` | PIN for admin access (set in SWA app settings) |
+| `VITE_FACILITATOR_PIN` | PIN for facilitator access (set in SWA app settings) |
 | `VITE_SHAREPOINT_URL` | SharePoint base URL |
+| `VITE_AZURE_CLIENT_ID` | (Future) Azure AD App Registration client ID |
+| `VITE_AZURE_TENANT_ID` | (Future) Azure AD tenant ID for @mbpce.com |
+
+## Constraints
+- **Azure SWA Free tier** — 2 custom domains, 0.5 GB storage, 100 GB bandwidth/month, 1 integrated Azure Functions API
 
 ## Open Items
-- [ ] Azure AD App Registration (client ID / tenant ID)
+- [ ] Azure AD App Registration — blocked, user lacks permissions; upgrade auth when available
 - [ ] Scoring formula definition per assessment type
-- [ ] Simple auth mechanism for non-Microsoft "user" role
-- [ ] Role assignment strategy (AD groups vs. SharePoint list)
 - [ ] Visualization/charting library for readiness dashboards

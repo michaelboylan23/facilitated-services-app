@@ -1,9 +1,15 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import "./Header.css";
 
 export function Header() {
-  const { user, login, logout } = useAuth();
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    logout();
+    navigate("/login");
+  };
 
   return (
     <header className="app-header">
@@ -13,8 +19,12 @@ export function Header() {
         </Link>
         {user && (
           <nav className="header-nav">
-            <Link to="/projects">Projects</Link>
-            <Link to="/assessments">Assessments</Link>
+            {(user.role === "admin" || user.role === "facilitator") && (
+              <>
+                <Link to="/projects">Projects</Link>
+                <Link to="/assessments">Assessments</Link>
+              </>
+            )}
             {user.role === "admin" && (
               <Link to="/admin">Admin</Link>
             )}
@@ -26,14 +36,14 @@ export function Header() {
           <div className="user-info">
             <span className="user-name">{user.displayName}</span>
             <span className="user-role">{user.role}</span>
-            <button onClick={logout} className="btn btn-secondary btn-sm">
+            <button onClick={handleLogout} className="btn btn-secondary btn-sm">
               Sign Out
             </button>
           </div>
         ) : (
-          <button onClick={login} className="btn btn-primary btn-sm">
-            Sign In with Microsoft
-          </button>
+          <Link to="/login" className="btn btn-primary btn-sm">
+            Sign In
+          </Link>
         )}
       </div>
     </header>
