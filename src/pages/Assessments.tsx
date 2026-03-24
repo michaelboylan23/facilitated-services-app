@@ -1,29 +1,17 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import type { Assessment } from "../types";
-import { getAssessments } from "../services/sharepoint";
+import { getAssessments } from "../services/mockData";
 
 export function Assessments() {
-  const [assessments, setAssessments] = useState<Assessment[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    getAssessments()
-      .then(setAssessments)
-      .catch((err) => setError(err.message))
-      .finally(() => setLoading(false));
-  }, []);
-
-  if (loading) return <div>Loading assessments...</div>;
-  if (error) return <div className="error">Error: {error}</div>;
+  const [assessments] = useState<Assessment[]>(getAssessments);
 
   return (
     <div className="assessments-page">
       <div className="page-header">
         <h1>Assessments</h1>
-        <Link to="/assessments/new" className="btn btn-primary">
-          New Assessment
+        <Link to="/admin" className="btn btn-primary">
+          Manage Assessments
         </Link>
       </div>
       <table className="data-table">
@@ -44,13 +32,13 @@ export function Assessments() {
               <td>{a.Title}</td>
               <td>{a.ProjectNumber}</td>
               <td>{a.AssessmentType}</td>
-              <td>{a.AssessmentDate ? new Date(a.AssessmentDate).toLocaleDateString() : "-"}</td>
+              <td>{a.AssessmentDate ? new Date(a.AssessmentDate).toLocaleDateString() : "—"}</td>
               <td>
                 <span className={`status-badge status-${a.AssessmentStatus.toLowerCase().replace(" ", "-")}`}>
                   {a.AssessmentStatus}
                 </span>
               </td>
-              <td>{a.AssessmentScore ?? "-"}</td>
+              <td>{a.AssessmentScore ?? "—"}</td>
               <td>
                 <Link to={`/assessments/${a.Id}`} className="btn btn-sm btn-secondary">
                   Open

@@ -5,6 +5,7 @@ import { Home } from "./pages/Home";
 import { Login } from "./pages/Login";
 import { Projects } from "./pages/Projects";
 import { Assessments } from "./pages/Assessments";
+import { Admin } from "./pages/admin/Admin";
 import type { ReactNode } from "react";
 import type { AppRole } from "./types";
 
@@ -28,6 +29,10 @@ function AppRoutes() {
         <Route
           path="/assessments"
           element={<RequireAuth roles={["admin", "facilitator"]}><Assessments /></RequireAuth>}
+        />
+        <Route
+          path="/admin"
+          element={<RequireAuth roles={["admin"]}><Admin /></RequireAuth>}
         />
       </Route>
     </Routes>

@@ -1,29 +1,17 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import type { Project } from "../types";
-import { getProjects } from "../services/sharepoint";
+import { getProjects } from "../services/mockData";
 
 export function Projects() {
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    getProjects()
-      .then(setProjects)
-      .catch((err) => setError(err.message))
-      .finally(() => setLoading(false));
-  }, []);
-
-  if (loading) return <div>Loading projects...</div>;
-  if (error) return <div className="error">Error: {error}</div>;
+  const [projects] = useState<Project[]>(getProjects);
 
   return (
     <div className="projects-page">
       <div className="page-header">
         <h1>Projects</h1>
-        <Link to="/projects/new" className="btn btn-primary">
-          New Project
+        <Link to="/admin" className="btn btn-primary">
+          Manage Projects
         </Link>
       </div>
       <table className="data-table">
@@ -51,7 +39,7 @@ export function Projects() {
           {projects.length === 0 && (
             <tr>
               <td colSpan={4} style={{ textAlign: "center" }}>
-                No projects found. Create your first project to get started.
+                No projects found.
               </td>
             </tr>
           )}
