@@ -42,6 +42,7 @@ export function Login() {
   return (
     <div className="login-page">
       <div className="login-card">
+        <img src="/MBP_logo_navy.png" alt="MBP" className="login-logo" />
         <h1>Facilitated Services</h1>
         <p className="login-subtitle">Project Assessment Tool</p>
 

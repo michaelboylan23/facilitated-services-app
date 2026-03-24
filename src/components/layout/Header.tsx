@@ -15,7 +15,8 @@ export function Header() {
     <header className="app-header">
       <div className="header-left">
         <Link to="/" className="header-logo">
-          Facilitated Services
+          <img src="/MBP_logo_white.png" alt="MBP" />
+          <span>Facilitated Services</span>
         </Link>
         {user && (
           <nav className="header-nav">
