@@ -32,3 +32,4 @@ dist-ssr
 api/node_modules/
 api/dist/
 local.settings.json
+.claude/

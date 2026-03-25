@@ -70,16 +70,17 @@ When the Azure AD App Registration is available, the data layer will switch from
 ### Data Model
 
 #### Master Data (maintained by admins)
-- **Projects** — Title (Project Number), ProjectName, Client
+- **Projects** — Title (Project Number), ProjectName, Client, ProjectStatus, SecondaryLogo
 - **Question Categories** — per assessment type, with CategoryWeight and CategoryOrder
-- **Question Bank** — questions linked to categories, with DefaultQuestionScoreFactor
+- **Question Bank** — questions linked to categories, with DefaultQuestionScoreFactor, AdditionalInformation
 
 #### Instance Data (created per assessment)
-- **Assessments** — linked to a Project, typed, dated, scored
-- **Assessment Categories** — copied from master categories when assessment is created
-- **Assessment Questions** — copied from master question bank when assessment is created
-- **Assessment Responses** — user answers (ResponseScore 0-5) linked to questions
-- **Assessment Attendees** — people participating in an assessment session
+- **Assessments** — linked to a Project, typed, dated, scored, FacilitatorName, ProjectManagerName
+- **Assessment Categories** — copied from master categories; CategoryTargetScore, CategoryActualScore
+- **Assessment Questions** — copied from question bank; QuestionOrder, Priority (High/Medium/Low), Status (Unanswered/Answered/Ignored), AdditionalInformation
+- **Assessment Responses** — ResponseScore 0-5 (Yes=5, No=0 for boolean questions), Response text, Comments
+- **Assessment Attendees** — Attendee name, Company, Role, Email
+- **Assessment Actions** — Action text, ActionStatus (Open/In Progress/Complete/Closed), TargetDate, CompletedDate, ResponsiblePartyId (lookup to Attendees), QuestionId (optional link to question)
 
 ### Key Workflow
 1. Admin/Facilitator creates a Project
@@ -98,9 +99,32 @@ MBP brand colors defined as CSS variables in `src/App.css`:
 
 Logos: `public/MBP_logo_white.png` (header) and `public/MBP_logo_navy.png` (login page)
 
+## App Pages
+
+### Home / Dashboard
+- Project list with search, filter by status, sortable columns
+- Expandable rows showing assessments per project with quick-open
+- Create Project and Compare Assessments (TBD) buttons
+
+### Project Details (`/projects/:id`)
+- View/edit project info (number, name, status, client)
+- List of assessments with create new assessment form
+- Secondary logo upload (for client branding on PDFs — TBD)
+
+### Assessment (`/assessments/:id`) — 6 tabs
+1. **Summary** — Project info, facilitator, PM, status, score, Executive Summary (TBD)
+2. **Readiness** — Visual readiness cards per category with progress bars, color-coded by %
+3. **Questions** — Progress bar, category pill tabs, searchable/filterable table, click-to-open question detail modal with score input (0-5 + Ignore), response, comments, prev/next navigation, Edit button for question fields
+4. **Action Items** — CRUD table with status, responsible party (from attendees), target/completed dates, linked questions
+5. **Attendees** — CRUD table with name, company, role, email, action count; delete warns if actions assigned
+6. **Settings** — Edit assessment info, adjust category target scores, adjust question score factors and active status, export (TBD)
+
+### Admin (`/admin`) — admin role only
+- Tabbed CRUD for all SharePoint lists
+
 ## Scoring (TBD)
-- ResponseScore: 0-5 per question
-- QuestionScoreFactor: weight per question
+- ResponseScore: 0-5 per question (ignored questions excluded from totals)
+- QuestionScoreFactor: weight per question (adjustable per assessment in Settings)
 - CategoryWeight: weight per category
 - Exact formula for category and assessment roll-up scores is pending definition
 - Different assessment types may have different scoring approaches
@@ -128,6 +152,11 @@ Each type has its own set of master categories and questions. Scoring may differ
 ## Open Items
 - [ ] Azure AD App Registration — blocked, user lacks permissions; upgrade auth + SharePoint connection when available
 - [ ] Scoring formula definition per assessment type
-- [ ] Assessment response UI — the main screen where users answer questions during a session
-- [ ] Visualization/charting library for readiness dashboards
+- [ ] Add ResponseType column to Question Bank SP list (numeric 0-5 vs yes/no)
+- [ ] Print/Export functionality (PDF and XLSX) for questions, actions, attendees
+- [ ] Executive Summary feature
+- [ ] Compare Assessments feature
+- [ ] Readiness tab — richer visualizations (charts library TBD)
 - [ ] Session code generation and validation for user role
+- [ ] Secondary logo upload per project (client branding on PDFs)
+- [ ] Question history/audit trail (deferred)

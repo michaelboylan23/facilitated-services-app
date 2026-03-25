@@ -7,6 +7,7 @@ import type {
   AssessmentQuestion,
   AssessmentResponse,
   AssessmentAttendee,
+  AssessmentAction,
   AssessmentType,
 } from "../types";
 
@@ -22,6 +23,7 @@ const KEYS = {
   assessmentQuestions: "fs_assessment_questions",
   assessmentResponses: "fs_assessment_responses",
   assessmentAttendees: "fs_assessment_attendees",
+  assessmentActions: "fs_assessment_actions",
   nextId: "fs_next_id",
 } as const;
 
@@ -53,9 +55,9 @@ export function seedMockData(): void {
   if (localStorage.getItem(KEYS.projects)) return; // already seeded
 
   const projects: Project[] = [
-    { Id: 1, Title: "PRJ-001", ProjectName: "Highway 50 Bridge Replacement", Client: "VDOT" },
-    { Id: 2, Title: "PRJ-002", ProjectName: "Metro Station Expansion", Client: "WMATA" },
-    { Id: 3, Title: "PRJ-003", ProjectName: "Water Treatment Plant Upgrade", Client: "DC Water" },
+    { Id: 1, Title: "PRJ-001", ProjectName: "Highway 50 Bridge Replacement", Client: "VDOT", ProjectStatus: "Active" },
+    { Id: 2, Title: "PRJ-002", ProjectName: "Metro Station Expansion", Client: "WMATA", ProjectStatus: "Active" },
+    { Id: 3, Title: "PRJ-003", ProjectName: "Water Treatment Plant Upgrade", Client: "DC Water", ProjectStatus: "Planning" },
   ];
 
   const questionCategories: QuestionCategory[] = [
@@ -116,8 +118,8 @@ export function seedMockData(): void {
   ];
 
   const assessments: Assessment[] = [
-    { Id: 50, Title: "PRJ-001 Construction Readiness #1", ProjectNumber: "PRJ-001", AssessmentType: "Construction Readiness", AssessmentDate: "2026-03-15", AssessmentStatus: "In Progress", AssessmentScore: undefined },
-    { Id: 51, Title: "PRJ-002 PDRI Assessment", ProjectNumber: "PRJ-002", AssessmentType: "PDRI", AssessmentDate: "2026-03-10", AssessmentStatus: "Draft", AssessmentScore: undefined },
+    { Id: 50, Title: "PRJ-001 Construction Readiness #1", ProjectNumber: "PRJ-001", AssessmentType: "Construction Readiness", AssessmentDate: "2026-03-15", AssessmentStatus: "In Progress", FacilitatorName: "Michael Boylan", ProjectManagerName: "John Smith" },
+    { Id: 51, Title: "PRJ-002 PDRI Assessment", ProjectNumber: "PRJ-002", AssessmentType: "PDRI", AssessmentDate: "2026-03-10", AssessmentStatus: "Draft", FacilitatorName: "Michael Boylan", ProjectManagerName: "Jane Doe" },
   ];
 
   saveAll(KEYS.projects, projects);
@@ -128,6 +130,7 @@ export function seedMockData(): void {
   saveAll(KEYS.assessmentQuestions, []);
   saveAll(KEYS.assessmentResponses, []);
   saveAll(KEYS.assessmentAttendees, []);
+  saveAll(KEYS.assessmentActions, []);
   localStorage.setItem(KEYS.nextId, "400");
 }
 
@@ -140,6 +143,10 @@ export function getProjects(): Project[] {
 
 export function getProject(id: number): Project | undefined {
   return getProjects().find((p) => p.Id === id);
+}
+
+export function getProjectByNumber(projectNumber: string): Project | undefined {
+  return getProjects().find((p) => p.Title === projectNumber);
 }
 
 export function createProject(data: Omit<Project, "Id">): Project {
@@ -292,6 +299,10 @@ export function getAssessmentCategories(assessmentId?: number): AssessmentCatego
   return all.filter((c) => c.AssessmentId === assessmentId);
 }
 
+export function getAssessmentCategory(id: number): AssessmentCategory | undefined {
+  return getAll<AssessmentCategory>(KEYS.assessmentCategories).find((c) => c.Id === id);
+}
+
 export function createAssessmentCategory(data: Omit<AssessmentCategory, "Id">): AssessmentCategory {
   const items = getAll<AssessmentCategory>(KEYS.assessmentCategories);
   const newItem: AssessmentCategory = { ...data, Id: getNextId() };
@@ -300,13 +311,26 @@ export function createAssessmentCategory(data: Omit<AssessmentCategory, "Id">): 
   return newItem;
 }
 
+export function updateAssessmentCategory(id: number, updates: Partial<AssessmentCategory>): AssessmentCategory | undefined {
+  const items = getAll<AssessmentCategory>(KEYS.assessmentCategories);
+  const idx = items.findIndex((c) => c.Id === id);
+  if (idx === -1) return undefined;
+  items[idx] = { ...items[idx], ...updates };
+  saveAll(KEYS.assessmentCategories, items);
+  return items[idx];
+}
+
 // ============================================
 // Assessment Questions (Instance)
 // ============================================
 export function getAssessmentQuestions(assessmentId?: number): AssessmentQuestion[] {
   const all = getAll<AssessmentQuestion>(KEYS.assessmentQuestions);
   if (assessmentId === undefined) return all;
-  return all.filter((q) => q.AssessmentId === assessmentId);
+  return all.filter((q) => q.AssessmentId === assessmentId).sort((a, b) => a.QuestionOrder - b.QuestionOrder);
+}
+
+export function getAssessmentQuestion(id: number): AssessmentQuestion | undefined {
+  return getAll<AssessmentQuestion>(KEYS.assessmentQuestions).find((q) => q.Id === id);
 }
 
 export function createAssessmentQuestion(data: Omit<AssessmentQuestion, "Id">): AssessmentQuestion {
@@ -317,6 +341,15 @@ export function createAssessmentQuestion(data: Omit<AssessmentQuestion, "Id">): 
   return newItem;
 }
 
+export function updateAssessmentQuestion(id: number, updates: Partial<AssessmentQuestion>): AssessmentQuestion | undefined {
+  const items = getAll<AssessmentQuestion>(KEYS.assessmentQuestions);
+  const idx = items.findIndex((q) => q.Id === id);
+  if (idx === -1) return undefined;
+  items[idx] = { ...items[idx], ...updates };
+  saveAll(KEYS.assessmentQuestions, items);
+  return items[idx];
+}
+
 // ============================================
 // Assessment Responses
 // ============================================
@@ -324,6 +357,10 @@ export function getAssessmentResponses(assessmentId?: number): AssessmentRespons
   const all = getAll<AssessmentResponse>(KEYS.assessmentResponses);
   if (assessmentId === undefined) return all;
   return all.filter((r) => r.AssessmentId === assessmentId);
+}
+
+export function getResponseByQuestion(questionId: number): AssessmentResponse | undefined {
+  return getAll<AssessmentResponse>(KEYS.assessmentResponses).find((r) => r.QuestionId === questionId);
 }
 
 export function saveResponse(data: Omit<AssessmentResponse, "Id">): AssessmentResponse {
@@ -343,6 +380,14 @@ export function updateResponse(id: number, updates: Partial<AssessmentResponse>)
   return items[idx];
 }
 
+export function upsertResponse(questionId: number, data: Omit<AssessmentResponse, "Id">): AssessmentResponse {
+  const existing = getResponseByQuestion(questionId);
+  if (existing) {
+    return updateResponse(existing.Id, data)!;
+  }
+  return saveResponse(data);
+}
+
 // ============================================
 // Assessment Attendees
 // ============================================
@@ -352,12 +397,75 @@ export function getAssessmentAttendees(assessmentId?: number): AssessmentAttende
   return all.filter((a) => a.AssessmentId === assessmentId);
 }
 
+export function getAssessmentAttendee(id: number): AssessmentAttendee | undefined {
+  return getAll<AssessmentAttendee>(KEYS.assessmentAttendees).find((a) => a.Id === id);
+}
+
 export function addAttendee(data: Omit<AssessmentAttendee, "Id">): AssessmentAttendee {
   const items = getAll<AssessmentAttendee>(KEYS.assessmentAttendees);
   const newItem: AssessmentAttendee = { ...data, Id: getNextId() };
   items.push(newItem);
   saveAll(KEYS.assessmentAttendees, items);
   return newItem;
+}
+
+export function updateAttendee(id: number, updates: Partial<AssessmentAttendee>): AssessmentAttendee | undefined {
+  const items = getAll<AssessmentAttendee>(KEYS.assessmentAttendees);
+  const idx = items.findIndex((a) => a.Id === id);
+  if (idx === -1) return undefined;
+  items[idx] = { ...items[idx], ...updates };
+  saveAll(KEYS.assessmentAttendees, items);
+  return items[idx];
+}
+
+export function deleteAttendee(id: number): boolean {
+  const items = getAll<AssessmentAttendee>(KEYS.assessmentAttendees);
+  const filtered = items.filter((a) => a.Id !== id);
+  if (filtered.length === items.length) return false;
+  saveAll(KEYS.assessmentAttendees, filtered);
+  return true;
+}
+
+// ============================================
+// Assessment Actions
+// ============================================
+export function getAssessmentActions(assessmentId?: number): AssessmentAction[] {
+  const all = getAll<AssessmentAction>(KEYS.assessmentActions);
+  if (assessmentId === undefined) return all;
+  return all.filter((a) => a.AssessmentId === assessmentId);
+}
+
+export function getAssessmentAction(id: number): AssessmentAction | undefined {
+  return getAll<AssessmentAction>(KEYS.assessmentActions).find((a) => a.Id === id);
+}
+
+export function createAction(data: Omit<AssessmentAction, "Id">): AssessmentAction {
+  const items = getAll<AssessmentAction>(KEYS.assessmentActions);
+  const newItem: AssessmentAction = { ...data, Id: getNextId() };
+  items.push(newItem);
+  saveAll(KEYS.assessmentActions, items);
+  return newItem;
+}
+
+export function updateAction(id: number, updates: Partial<AssessmentAction>): AssessmentAction | undefined {
+  const items = getAll<AssessmentAction>(KEYS.assessmentActions);
+  const idx = items.findIndex((a) => a.Id === id);
+  if (idx === -1) return undefined;
+  items[idx] = { ...items[idx], ...updates };
+  saveAll(KEYS.assessmentActions, items);
+  return items[idx];
+}
+
+export function deleteAction(id: number): boolean {
+  const items = getAll<AssessmentAction>(KEYS.assessmentActions);
+  const filtered = items.filter((a) => a.Id !== id);
+  if (filtered.length === items.length) return false;
+  saveAll(KEYS.assessmentActions, filtered);
+  return true;
+}
+
+export function getActionsByAttendee(attendeeId: number): AssessmentAction[] {
+  return getAll<AssessmentAction>(KEYS.assessmentActions).filter((a) => a.ResponsiblePartyId === attendeeId);
 }
 
 // ============================================
@@ -372,11 +480,13 @@ export function initializeAssessment(assessmentId: number, assessmentType: Asses
       Title: mc.Title,
       AssessmentId: assessmentId,
       CategoryId: mc.Id,
+      CategoryTargetScore: 5, // Default target
     });
     categoryIdMap.set(mc.Id, newCat.Id);
   }
 
   const masterQuestions = getQuestionBank(assessmentType);
+  let order = 1;
 
   for (const mq of masterQuestions) {
     const assessmentCategoryId = categoryIdMap.get(mq.CategoryId);
@@ -388,7 +498,10 @@ export function initializeAssessment(assessmentId: number, assessmentType: Asses
         CategoryId: assessmentCategoryId,
         QuestionBankId: mq.Id,
         QuestionScoreFactor: mq.DefaultQuestionScoreFactor,
+        QuestionOrder: order++,
         Active: true,
+        AdditionalInformation: mq.AdditionalInformation,
+        Status: "Unanswered",
       });
     }
   }

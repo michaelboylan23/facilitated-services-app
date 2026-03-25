@@ -3,8 +3,8 @@ import { AuthProvider, useAuth } from "./context/AuthContext";
 import { Layout } from "./components/layout/Layout";
 import { Home } from "./pages/Home";
 import { Login } from "./pages/Login";
-import { Projects } from "./pages/Projects";
-import { Assessments } from "./pages/Assessments";
+import { ProjectDetails } from "./pages/ProjectDetails";
+import { AssessmentPage } from "./pages/assessment/AssessmentPage";
 import { Admin } from "./pages/admin/Admin";
 import type { ReactNode } from "react";
 import type { AppRole } from "./types";
@@ -23,12 +23,12 @@ function AppRoutes() {
         <Route path="/login" element={<Login />} />
         <Route path="/" element={<RequireAuth><Home /></RequireAuth>} />
         <Route
-          path="/projects"
-          element={<RequireAuth roles={["admin", "facilitator"]}><Projects /></RequireAuth>}
+          path="/projects/:id"
+          element={<RequireAuth roles={["admin", "facilitator"]}><ProjectDetails /></RequireAuth>}
         />
         <Route
-          path="/assessments"
-          element={<RequireAuth roles={["admin", "facilitator"]}><Assessments /></RequireAuth>}
+          path="/assessments/:id"
+          element={<RequireAuth><AssessmentPage /></RequireAuth>}
         />
         <Route
           path="/admin"

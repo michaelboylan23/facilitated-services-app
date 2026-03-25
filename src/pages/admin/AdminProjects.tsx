@@ -42,7 +42,7 @@ export function AdminProjects() {
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
     if (isNew) {
-      createProject({ Title: title, ProjectName: projectName, Client: client });
+      createProject({ Title: title, ProjectName: projectName, Client: client, ProjectStatus: "Active" });
     } else if (editing) {
       updateProject(editing.Id, { Title: title, ProjectName: projectName, Client: client });
     }

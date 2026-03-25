@@ -1,0 +1,123 @@
+/* Dashboard Filters */
+.dashboard-filters {
+  display: flex;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.search-input {
+  flex: 1;
+  max-width: 350px;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 0.9rem;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: var(--cyan);
+  box-shadow: 0 0 0 2px rgba(15, 163, 223, 0.15);
+}
+
+.dashboard-filters select {
+  padding: 0.5rem 0.65rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 0.9rem;
+}
+
+.header-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+/* Sortable headers */
+.sortable {
+  cursor: pointer;
+  user-select: none;
+}
+
+.sortable:hover {
+  color: var(--cyan) !important;
+}
+
+/* Expand button */
+.expand-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1rem;
+  color: var(--gray);
+  padding: 0.15rem 0.35rem;
+  border-radius: 4px;
+  transition: background 0.15s;
+}
+
+.expand-btn:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.row-expanded {
+  background: var(--cyan-light) !important;
+}
+
+/* Assessment dropdown */
+.assessment-dropdown-row td {
+  padding: 0 !important;
+  border-bottom: 2px solid var(--cyan);
+}
+
+.assessment-dropdown {
+  padding: 1rem 1.5rem;
+  background: #f8f9fb;
+}
+
+.assessment-subtable {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 0.75rem;
+  font-size: 0.88rem;
+}
+
+.assessment-subtable th {
+  text-align: left;
+  padding: 0.4rem 0.75rem;
+  color: var(--gray);
+  font-weight: 600;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--border);
+}
+
+.assessment-subtable td {
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid #eee;
+}
+
+.no-assessments {
+  color: var(--gray);
+  font-size: 0.9rem;
+  margin-bottom: 0.75rem;
+}
+
+/* Status colors */
+.status-active {
+  background: #d4edda;
+  color: #155724;
+}
+
+.status-planning {
+  background: var(--cyan-light);
+  color: #0a6ba8;
+}
+
+.status-on-hold {
+  background: #fff3cd;
+  color: #856404;
+}
+
+.status-closed {
+  background: #e1e3e8;
+  color: var(--gray);
+}
