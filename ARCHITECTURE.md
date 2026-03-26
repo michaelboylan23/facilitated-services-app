@@ -48,14 +48,24 @@ facilitated-services-app/
 
 ## Authentication & Roles
 
-### Current: PIN / Session Code (Interim)
+### Production: SWA Built-in Auth (Entra ID) + Session Codes
+Azure Static Web Apps "Simple" mode handles Microsoft Entra ID authentication automatically — no App Registration needed.
+
 | Role | Auth Method | Permissions |
 |------|------------|-------------|
-| Admin | Admin PIN (stored in SWA app settings) | Full access: manage master questions, categories, all projects/assessments via Admin panel |
-| Facilitator | Facilitator PIN (stored in SWA app settings) | Create/manage projects and assessments, facilitate sessions |
+| Admin | Microsoft Entra ID (@mbpce.com) — role assigned via SWA Role Assignments | Full access: manage master questions, categories, all projects/assessments via Admin panel |
+| Facilitator | Microsoft Entra ID (@mbpce.com) — default role for authenticated users | Create/manage projects and assessments, facilitate sessions |
 | User | Session code + name (no account required) | Respond to assessment questions during facilitated sessions |
 
-> **Planned upgrade:** Replace Admin/Facilitator PINs with Microsoft Entra ID (MSAL) once an Azure AD App Registration is created for the @mbpce.com tenant. The session code approach for regular users will remain. MSAL packages are already installed and auth service code exists at `src/services/auth.ts` — it just needs a valid client ID and tenant ID to activate. Blocked because user does not have permission to create App Registrations in the tenant.
+**How it works:**
+- Login page shows "Sign in with Microsoft" button → redirects to `/.auth/login/aad`
+- After sign-in, app calls `/.auth/me` to get user identity and SWA roles
+- Roles (admin, facilitator) are assigned via Azure Portal → SWA → Role Assignments
+- All authenticated @mbpce.com users default to "facilitator" role
+- GitHub and Twitter providers are blocked in `staticwebapp.config.json`
+
+### Local Development: PIN Fallback
+PINs (`VITE_ADMIN_PIN`, `VITE_FACILITATOR_PIN` in `.env`) are used for local development since `/.auth/me` is not available on localhost.
 
 ## Data Layer
 

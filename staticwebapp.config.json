@@ -3,21 +3,14 @@
     "rewrite": "/index.html",
     "exclude": ["/assets/*", "/api/*"]
   },
-  "auth": {
-    "identityProviders": {
-      "azureActiveDirectory": {
-        "registration": {
-          "openIdIssuer": "https://login.microsoftonline.com/YOUR_TENANT_ID/v2.0",
-          "clientIdSettingName": "AZURE_CLIENT_ID",
-          "clientSecretSettingName": "AZURE_CLIENT_SECRET"
-        }
-      }
-    }
-  },
   "routes": [
     {
-      "route": "/admin/*",
-      "allowedRoles": ["admin"]
+      "route": "/.auth/login/github",
+      "statusCode": 404
+    },
+    {
+      "route": "/.auth/login/twitter",
+      "statusCode": 404
     },
     {
       "route": "/api/*",
@@ -26,7 +19,7 @@
   ],
   "responseOverrides": {
     "401": {
-      "redirect": "/.auth/login/aad",
+      "redirect": "/login",
       "statusCode": 302
     }
   }
